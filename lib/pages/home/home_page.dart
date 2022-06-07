@@ -2,17 +2,12 @@ import 'package:budget_tracker_app/model/transaction_item.dart';
 import 'package:budget_tracker_app/pages/home/components/add_transaction_dialog.dart';
 import 'package:budget_tracker_app/pages/home/components/circular_percent.dart';
 import 'package:budget_tracker_app/pages/home/components/transaction_card.dart';
+import 'package:budget_tracker_app/services/budget_service.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
-
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  List<TransactionItem> items = [];
 
   @override
   Widget build(BuildContext context) {
@@ -25,9 +20,11 @@ class _HomePageState extends State<HomePage> {
               builder: (context) {
                 return AddTransactionDialog(
                   itemToAdd: (transactionItem) {
-                    setState(() {
-                      items.add(transactionItem);
-                    });
+                    final budgetService = Provider.of<BudgetService>(
+                      context,
+                      listen: false,
+                    );
+                    budgetService.addItem(transactionItem);
                   },
                 );
               });
@@ -53,11 +50,16 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(
                   height: 10,
                 ),
-                ...List.generate(
-                    items.length,
-                    (index) => TransactionCard(
-                          item: items[index],
-                        )),
+                Consumer<BudgetService>(builder: ((context, value, child) {
+                  return ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: value.items.length,
+                      itemBuilder: (context, index) {
+                        return TransactionCard(
+                          item: value.items[index],
+                        );
+                      });
+                }))
               ],
             ),
           ),
